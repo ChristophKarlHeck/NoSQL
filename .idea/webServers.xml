@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="facb9fd2-995b-40c4-afac-61b85b4f84e0" name="salesApp" url="http://192.168.56.101">
+        <fileTransfer rootFolder="/var/www/html" accessType="SFTP" host="192.168.56.101" port="22" sshConfigId="d958e0ad-508b-4469-8749-d1610c3b3491" sshConfig="dbuser@192.168.56.101:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

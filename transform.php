@@ -11,6 +11,7 @@ function customer()
         $sql = "select * from customers;";
         if ($result = mysqli_query($sqlverbindung, $sql)) {
             while ($row = $result->fetch_assoc()) {
+                $sql2 = "select * from payments where ";
                 echo "Abgewickelt:". $row['customerNumber']. "<br>";
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'customerNumber' => $row['customerNumber'],
                     'customerName' => $row['customerName'], 'contactFirstName' => $row['contactFirstName'],
@@ -20,13 +21,10 @@ function customer()
                 $bulk->insert($doc);
             }
         }
-
         $mng->executeBulkWrite('transform.customer', $bulk);
-
     } catch (MongoDB\Driver\Exception\Exception $e) {
         echo "Fehler:", $e->getMessage(), "\n";
     }
 }
-
 customer();
 ?>

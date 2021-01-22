@@ -27,8 +27,8 @@ function customer()
                     }
                 }
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'customerNumber' => $row['customerNumber'],
-                    'customerName' => $row['customerName'], 'contactFirstName' => $row['contactFirstName'],
-                    'contactLastName' => $row['contactLastName'], 'phone' => $row['phone'],
+                    'customerName' => $row['customerName'], 'contactLastName' => $row['contactLastName'],
+                    'contactFirstName' => $row['contactFirstName'], 'phone' => $row['phone'],
                     'adressLine1' => $row['addressLine1'], 'adressLine2' => $row['addressLine2'],
                     'city' => $row['city'],'state' => $row['state'],'postalCode' => $row['postalCode'],
                     'country' => $row['country'],'salesRepEmployeeNumber' => $row['salesRepEmployeeNumber'],
@@ -37,7 +37,7 @@ function customer()
             }
         }
         echo "Kundendaten wurden erfolgreich Importiert!<br>";
-        $mng->executeBulkWrite('transform.customer', $bulk);
+        $mng->executeBulkWrite('salesdb.customer', $bulk);
     } catch (MongoDB\Driver\Exception\Exception $e) {
         echo "Bei dem Import der Kundendaten ist folgender Fehler aufgetretten:<br>", $e->getMessage(), "\n";
     }
@@ -65,7 +65,7 @@ function products()
             }
         }
         echo "Produktdaten wurden erfolgreich Importiert!<br>";
-        $mng->executeBulkWrite('transform.products', $bulk);
+        $mng->executeBulkWrite('salesdb.products', $bulk);
     } catch (MongoDB\Driver\Exception\Exception $e) {
         echo "Bei dem Import der Produktdaten ist folgender Fehler aufgetretten:<br>", $e->getMessage(), "\n";
     }
@@ -80,21 +80,29 @@ function orders()
         $mng = new MongoDB\Driver\Manager("mongodb://localhost:27017");
         $bulk = new MongoDB\Driver\BulkWrite;
         $sql = "select * from orders join customers on customers.customerNumber = orders.customerNumber;";
-        $sql2 = "";
         if ($result = mysqli_query($sqlverbindung, $sql)) {
             while ($row = $result->fetch_assoc()) {
+                $array_orderdetails = array();
+                $sql2 = "select * from orderdetails natural join products where orderNumber=".$row['orderNumber']." order by orderLineNumber asc;";
+                if ($result2 = mysqli_query($sqlverbindung, $sql2)) {
+                    while ($row2 = $result2->fetch_assoc()) {
+                        array_push($array_orderdetails, ['productCode' => $row2['productCode'],
+                            'productName' => $row2['productName'], 'quantityOrdered' => $row2['quantityOrdered'],
+                            'priceEach' => $row2['priceEach'],'orderLineNumber' => $row2['orderLineNumber']]);
+                    }
+                }
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'orderNumber' => $row['orderNumber'],
                     'orderDate' => $row['orderDate'], 'requiredDate' => $row['requiredDate'],
                     'shippedDate' => $row['shippedDate'], 'status' => $row['status'],
                     'comments' => $row['comments'], 'customerAddress' => ['customerName' => $row['customerName'],
                         'addressLine1' => $row['addressLine1'],'addressLine2' => $row['addressLine2'],
                         'city' => $row['city'], 'state' => $row['state'],
-                        'postalCode' => $row['postalCode'], 'country' => $row['country']]];
+                        'postalCode' => $row['postalCode'], 'country' => $row['country']],"orderDetails" => $array_orderdetails];
                 $bulk->insert($doc);
             }
         }
         echo "Bestellungsdaten wurden erfolgreich Importiert!<br>";
-        $mng->executeBulkWrite('transform.orders', $bulk);
+        $mng->executeBulkWrite('salesdb.orders', $bulk);
     } catch (MongoDB\Driver\Exception\Exception $e) {
         echo "Bei dem Import der Bestellungsdaten ist folgender Fehler aufgetretten:<br>", $e->getMessage(), "\n";
     }
@@ -124,7 +132,7 @@ function employees()
             }
         }
         echo "Mitarbeiterdaten wurden erfolgreich Importiert!<br>";
-        $mng->executeBulkWrite('transform.employees', $bulk);
+        $mng->executeBulkWrite('salesdb.employees', $bulk);
     } catch (MongoDB\Driver\Exception\Exception $e) {
         echo "Bei dem Import der Mitarbeiterdaten ist folgender Fehler aufgetretten:<br>", $e->getMessage(), "\n";
     }

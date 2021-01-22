@@ -111,16 +111,15 @@ function employees()
         $sql = "select * from employees join offices on employees.officeCode = offices.officeCode;";
         if ($result = mysqli_query($sqlverbindung, $sql)) {
             while ($row = $result->fetch_assoc()) {
-                $innerdoc = ['supervisor' => $row['reportsTo'],
-                    'jobTitle' => $row['jobTitle'],'officeCode' => $row['officeCode'],
-                    'city' => $row['city'], 'phone' => $row['phone'],
-                    'addressLine1' => $row['addressLine1'], 'addressLine2' => $row['addressLine2'],
-                    'state' => $row['state'], 'country' => $row['country'],'postalCode' => $row['postalCode'],
+                $innerdoc = ['officeCode' => $row['officeCode'], 'city' => $row['city'],
+                    'phone' => $row['phone'],'addressLine1' => $row['addressLine1'],
+                    'addressLine2' => $row['addressLine2'], 'state' => $row['state'],
+                    'country' => $row['country'],'postalCode' => $row['postalCode'],
                     'territory' => $row['territory']];
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'employeeNumber' => $row['employeeNumber'],
                     'lastName' => $row['lastName'], 'firstName' => $row['firstName'],
-                    'extension' => $row['extension'], 'email' => $row['email'],'supervisor' => $innerdoc,
-                    'territory' => $row['territory']];
+                    'extension' => $row['extension'], 'email' => $row['email'], 'supervisor' => $row['reportsTo'],
+                    'jobTitle' => $row['jobTitle'],'offices' => $innerdoc];
                 $bulk->insert($doc);
             }
         }

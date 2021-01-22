@@ -11,13 +11,28 @@ function customer()
         $sql = "select * from customers;";
         if ($result = mysqli_query($sqlverbindung, $sql)) {
             while ($row = $result->fetch_assoc()) {
+                $array_payments = array();
+                $array_orders = array();
+                $sql2 = "select * from payments where customerNumber=".$row['customerNumber'].";";
+                $sql3 = "select * from orders where customerNumber=".$row['customerNumber'].";";
+                if($result2 = mysqli_query($sqlverbindung, $sql2)){
+                    while ($row2 = $result2->fetch_assoc()) {
+                        array_push($array_payments, ['checkNumber' => $row2['checkNumber'],'paymentDate' => $row2['paymentDate'],
+                            'amount' => $row2['amount']]);
+                    }
+                }
+                if($result3 = mysqli_query($sqlverbindung, $sql3)){
+                    while ($row3 = $result3->fetch_assoc()) {
+                        array_push($array_orders, $row3['orderNumber']);
+                    }
+                }
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'customerNumber' => $row['customerNumber'],
                     'customerName' => $row['customerName'], 'contactFirstName' => $row['contactFirstName'],
                     'contactLastName' => $row['contactLastName'], 'phone' => $row['phone'],
                     'adressLine1' => $row['addressLine1'], 'adressLine2' => $row['addressLine2'],
                     'city' => $row['city'],'state' => $row['state'],'postalCode' => $row['postalCode'],
                     'country' => $row['country'],'salesRepEmployeeNumber' => $row['salesRepEmployeeNumber'],
-                    'creditLimit' => $row['creditLimit']];
+                    'creditLimit' => $row['creditLimit'], 'payments' => $array_payments, 'orderNumbers' => $array_orders];
                 $bulk->insert($doc);
             }
         }
@@ -43,9 +58,9 @@ function products()
                     'productName' => $row['productName'], 'productScale' => $row['productScale'],
                     'productVendor' => $row['productVendor'], 'productDescription' => $row['productDescription'],
                     'quantityInStock' => $row['quantityInStock'], 'buyPrice' => $row['buyPrice'],
-                    'MSRP' => $row['MSRP'],'productLine' => $row['productLine'],
-                    'textDescription' => $row['textDescription'], 'htmlDescription' => $row['htmlDescription'],
-                    'image' => $row['image']];
+                    'MSRP' => $row['MSRP'],'productlines' => ['productLine' => $row['productLine'],
+                        'textDescription' => $row['textDescription'], 'htmlDescription' => $row['htmlDescription'],
+                        'image' => $row['image']]];
                 $bulk->insert($doc);
             }
         }
@@ -65,15 +80,16 @@ function orders()
         $mng = new MongoDB\Driver\Manager("mongodb://localhost:27017");
         $bulk = new MongoDB\Driver\BulkWrite;
         $sql = "select * from orders join customers on customers.customerNumber = orders.customerNumber;";
+        $sql2 = "";
         if ($result = mysqli_query($sqlverbindung, $sql)) {
             while ($row = $result->fetch_assoc()) {
                 $doc = ['_id' => new MongoDB\BSON\ObjectID, 'orderNumber' => $row['orderNumber'],
                     'orderDate' => $row['orderDate'], 'requiredDate' => $row['requiredDate'],
                     'shippedDate' => $row['shippedDate'], 'status' => $row['status'],
-                    'comments' => $row['comments'], 'customerNumber' => $row['customerNumber'],
-                    'customerName' => $row['customerName'],'addressLine1' => $row['addressLine1'],
-                    'addressLine2' => $row['addressLine2'], 'city' => $row['city'],
-                    'state' => $row['state'], 'postalCode' => $row['postalCode'], 'country' => $row['country']];
+                    'comments' => $row['comments'], 'customerAddress' => ['customerName' => $row['customerName'],
+                        'addressLine1' => $row['addressLine1'],'addressLine2' => $row['addressLine2'],
+                        'city' => $row['city'], 'state' => $row['state'],
+                        'postalCode' => $row['postalCode'], 'country' => $row['country']]];
                 $bulk->insert($doc);
             }
         }
